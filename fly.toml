@@ -1,0 +1,28 @@
+# Fly.io yapılandırması — worker (long polling, public port yok).
+# Kurulum:
+#   fly launch --no-deploy        (uygulamayı oluştur, bu dosyayı kullan)
+#   fly volume create stock_tracker_data --size 1 --region fra
+#   fly secrets set TELEGRAM_BOT_TOKEN=BURAYA_TOKEN
+#   fly deploy
+
+app = "stock_tracker"
+primary_region = "fra"  # Frankfurt — Türkiye'ye en yakın Fly bölgelerinden
+
+[build]
+
+[processes]
+app = "python -m stock_tracker.bot.main"
+
+# SQLite dosyasının kalıcı olması için disk
+[mounts]
+source = "stock_tracker_data"
+destination = "/data"
+
+[env]
+DB_URL = "sqlite:////data/stock_tracker.db"
+POLL_INTERVAL_MINUTES = "10"
+
+# Web servisi yok; tek bir makine yeterli.
+[[vm]]
+size = "shared-cpu-1x"
+memory = "256mb"
