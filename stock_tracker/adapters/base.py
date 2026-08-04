@@ -55,7 +55,3 @@ def get_adapter(url: str) -> StockAdapter | None:
         if adapter.matches(url):
             return adapter
     return None
-
-
-def all_adapters() -> list[StockAdapter]:
-    return list(_ADAPTERS)
