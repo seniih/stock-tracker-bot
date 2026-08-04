@@ -32,6 +32,6 @@ env/
 
 # Editor / OS
 .DS_Store
-Thumbs.db
-.idea/
-.vscode/
+
+# Claude
+.claude
