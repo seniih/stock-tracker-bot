@@ -23,6 +23,7 @@ sudo docker rm -f stock-tracker 2>/dev/null || true
 
 echo "==> Bot baslatiliyor (7/24, otomatik yeniden baslatmali)..."
 sudo docker run -d --name stock-tracker --restart unless-stopped \
+  --log-opt max-size=10m --log-opt max-file=3 \
   -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
   -v stock_tracker_data:/data \
   stock-tracker
