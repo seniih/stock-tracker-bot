@@ -1,7 +1,13 @@
-"""Adaptörlerin paylaştığı HTTP istemcisi: gerçekçi header'lar + basit rate-limit.
+"""Adaptörlerin paylaştığı HTTP istemcisi: tarayıcı gibi görünen istekler + basit rate-limit.
 
 Sitelere kibar olmak (ve bloklanmamak) için domain başına istekler arasına küçük bir
-bekleme koyar ve tarayıcıya benzeyen bir User-Agent gönderir.
+bekleme koyar.
+
+`httpx` yerine `curl_cffi` kullanılıyor: `httpx`'in TLS/HTTP2 el sıkışması gerçek
+Chrome'unkinden farklı bir parmak izi (JA3/JA4) bırakıyor ve Akamai gibi
+bot-korumaları bunu header'lardan bağımsız olarak tespit edip 403 dönebiliyor.
+`curl_cffi` gerçek bir Chrome'un TLS/HTTP2 parmak izini taklit ediyor
+(`impersonate="chrome"`).
 """
 from __future__ import annotations
 
@@ -9,29 +15,15 @@ import asyncio
 import time
 from urllib.parse import urlsplit
 
-import httpx
+from curl_cffi.requests import AsyncSession, Response
 
-# Gerçek bir Chrome isteğine benzeyen header seti — bazı siteler (DeFacto vb.)
-# eksik header'lı istekleri 403 ile reddediyor.
+# `impersonate="chrome"` zaten User-Agent, sec-ch-ua, Accept vb. tüm header'ları
+# taklit edilen Chrome sürümüyle tutarlı şekilde otomatik ayarlıyor (TLS parmak
+# izinden farklı bir tarayıcı sürümü iddia etmek, tam tersine şüphe uyandırır).
+# Burada sadece siteye Türkçe içerik istediğimizi belirtmek için Accept-Language
+# override ediliyor.
 _DEFAULT_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept": (
-        "text/html,application/xhtml+xml,application/xml;q=0.9,"
-        "image/avif,image/webp,*/*;q=0.8"
-    ),
     "Accept-Language": "tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-    "sec-ch-ua-mobile": "?0",
-    "sec-ch-ua-platform": '"macOS"',
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Upgrade-Insecure-Requests": "1",
 }
 
 # Aynı domaine ardışık istekler arasında en az bu kadar saniye bekle.
@@ -55,11 +47,9 @@ async def _throttle(domain: str) -> None:
         _last_request_at[domain] = time.monotonic()
 
 
-async def get(url: str, *, headers: dict | None = None, **kwargs) -> httpx.Response:
+async def get(url: str, *, headers: dict | None = None, **kwargs) -> Response:
     """Rate-limit'li GET. Ek header'lar varsayılanların üzerine yazılır."""
     await _throttle(_domain(url))
     merged = {**_DEFAULT_HEADERS, **(headers or {})}
-    async with httpx.AsyncClient(
-        follow_redirects=True, timeout=20.0, headers=merged, http2=True
-    ) as client:
-        return await client.get(url, **kwargs)
+    async with AsyncSession(impersonate="chrome", timeout=20.0) as session:
+        return await session.get(url, headers=merged, allow_redirects=True, **kwargs)
