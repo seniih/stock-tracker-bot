@@ -43,7 +43,7 @@ stock_tracker/
 - [x] Faz 2 — Link gönder → bedenleri butonla seç → abone ol · `/liste` · sil
 - [x] Faz 3 — Poller + bildirim (yok→var geçişinde haber, spam yok)
 - [x] Faz 4 — DeFacto eklendi ✅ (Bershka/Pull&Bear/LCW/H&M: Akamai bloğu, bkz. tablo)
-- [x] Faz 5 — Deploy hazır (Dockerfile + fly.toml, imaj doğrulandı)
+- [x] Faz 5 — Deploy hazır (Dockerfile + `deploy/setup.sh`, imaj doğrulandı)
 
 ### Desteklenen mağazalar
 | Mağaza | Durum | Yöntem |
@@ -63,14 +63,32 @@ stock_tracker/
 Bot bir **worker** olarak long-polling ile çalışır — public port/webhook gerekmez.
 SQLite verisi kalıcı bir diskte (`/data`) tutulur.
 
-### Fly.io (önerilen)
+### Kendi VPS'in (önerilen)
+
+Tek komutla kurulum: Docker'ı kurar, imajı build eder ve botu
+`--restart unless-stopped` ile 7/24 ayakta tutar. SQLite verisi
+`stock_tracker_data` adlı kalıcı bir Docker volume'de (`/data`) tutulur.
+
+**İlk kurulum (Ubuntu VM, SSH ile bağlanıp):**
 ```bash
-fly launch --no-deploy                                   # fly.toml'u kullanır
-fly volume create stock_tracker_data --size 1 --region fra
-fly secrets set TELEGRAM_BOT_TOKEN=BURAYA_BOTFATHER_TOKEN
-fly deploy
-fly logs                                                 # çalışıyor mu izle
+git clone https://github.com/seniih/stock-tracker-bot.git /opt/stock_tracker
+cd /opt/stock_tracker
+TELEGRAM_BOT_TOKEN=BURAYA_BOTFATHER_TOKEN bash deploy/setup.sh
+sudo docker logs -f stock-tracker   # "Bot başlatılıyor" satırını gör
 ```
+
+**Otomatik deploy (GitHub Actions):** `main`'e her `git push`'ta
+`.github/workflows/deploy.yml` SSH ile VPS'e bağlanıp `git pull` +
+`deploy/setup.sh` çalıştırır ve konteyneri günceller. Repo secrets'a
+şunları ekle (Settings → Secrets and variables → Actions):
+
+| Secret | Açıklama |
+|---|---|
+| `VPS_HOST` | Sunucunun IP adresi veya domain'i |
+| `VPS_USER` | SSH kullanıcı adı (örn. `ubuntu`, `root`) |
+| `VPS_SSH_KEY` | Deploy için üretilen SSH private key (public key'i sunucudaki `~/.ssh/authorized_keys`'e eklenmeli) |
+| `VPS_SSH_PORT` | SSH portu (opsiyonel, varsayılan 22) |
+| `TELEGRAM_BOT_TOKEN` | BotFather token'ı |
 
 ### Railway
 1. Yeni proje → "Deploy from GitHub repo" (veya `railway up`). Dockerfile otomatik algılanır.
@@ -80,12 +98,3 @@ fly logs                                                 # çalışıyor mu izle
 
 > Alternatif: Volume yerine Railway Postgres eklentisi kullanıp `DB_URL`'i
 > `postgresql+psycopg://...` yapabilirsin (bu durumda `psycopg[binary]` bağımlılığı eklenir).
-
-### Docker (yerel/kendi sunucun)
-```bash
-docker build -t stock_tracker .
-docker run -d --name stock_tracker --restart unless-stopped \
-  -e TELEGRAM_BOT_TOKEN=BURAYA_TOKEN \
-  -v stock_tracker_data:/data \
-  stock_tracker
-```
