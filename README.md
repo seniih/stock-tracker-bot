@@ -99,8 +99,8 @@ Tek komutla kurulum: Docker'ı kurar, imajı build eder ve botu
 
 **İlk kurulum (Ubuntu VM, SSH ile bağlanıp):**
 ```bash
-git clone https://github.com/seniih/stock-tracker-bot.git /opt/stock_tracker
-cd /opt/stock_tracker
+git clone https://github.com/seniih/stock-tracker-bot.git /opt/apps/stock_tracker
+cd /opt/apps/stock_tracker
 TELEGRAM_BOT_TOKEN=BURAYA_BOTFATHER_TOKEN bash deploy/setup.sh
 sudo docker logs -f stock-tracker   # "Bot başlatılıyor" satırını gör
 ```
