@@ -4,9 +4,19 @@
 #
 # Kullanım (repo kök dizininde):
 #   TELEGRAM_BOT_TOKEN=123456:GERCEK_TOKEN bash deploy/setup.sh
+#
+# Ya da: repo kökünde bir .env dosyası oluşturup (TELEGRAM_BOT_TOKEN=... satırıyla)
+# sadece `bash deploy/setup.sh` çalıştır — token her seferinde elle verilmez.
 set -euo pipefail
 
-: "${TELEGRAM_BOT_TOKEN:?HATA: TELEGRAM_BOT_TOKEN ortam degiskeni gerekli}"
+if [[ -z "${TELEGRAM_BOT_TOKEN:-}" && -f .env ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source .env
+  set +a
+fi
+
+: "${TELEGRAM_BOT_TOKEN:?HATA: TELEGRAM_BOT_TOKEN tanimli degil (ortam degiskeni olarak ver ya da repo kokunde .env dosyasi olustur)}"
 
 echo "==> Docker kuruluyor (gerekliyse)..."
 if ! command -v docker >/dev/null 2>&1; then
