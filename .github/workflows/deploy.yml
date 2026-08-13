@@ -18,10 +18,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
-          envs: TELEGRAM_BOT_TOKEN
           script: |
             cd /opt/apps/stock_tracker
             git pull --ff-only
-            TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" bash deploy/setup.sh
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+            bash deploy/setup.sh
