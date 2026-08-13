@@ -23,18 +23,13 @@ fi
 
 : "${TELEGRAM_BOT_TOKEN:?HATA: TELEGRAM_BOT_TOKEN tanimli degil (ortam degiskeni olarak ver ya da repo kokunde .env dosyasi olustur)}"
 
-echo "==> Docker kuruluyor (gerekliyse)..."
-if ! command -v docker >/dev/null 2>&1; then
-  sudo apt-get update -y
-  sudo apt-get install -y docker.io
-fi
-sudo systemctl enable --now docker
+# Docker'ın sunucuda önceden manuel olarak kurulmuş olduğu varsayılır.
 
 echo "==> Imaj build ediliyor..."
-sudo docker build -t stock-tracker .
+docker build -t stock-tracker .
 
 echo "==> Eski konteyner varsa kaldiriliyor..."
-sudo docker rm -f stock-tracker 2>/dev/null || true
+docker rm -f stock-tracker 2>/dev/null || true
 
 echo "==> Bot baslatiliyor (7/24, otomatik yeniden baslatmali)..."
 # DB_URL bilerek forward edilmiyor: Dockerfile'daki /data yolu, asagidaki
@@ -42,7 +37,7 @@ echo "==> Bot baslatiliyor (7/24, otomatik yeniden baslatmali)..."
 # goreli bir SQLite yolu olabilir) DB_URL buraya sizarsa, veri her yeniden
 # deploy'da (docker rm + docker run) konteynerin gecici dosya sistemine yazilip
 # kalici volume yerine sessizce kaybolur.
-sudo docker run -d --name stock-tracker --restart unless-stopped \
+docker run -d --name stock-tracker --restart unless-stopped \
   --log-opt max-size=10m --log-opt max-file=3 \
   -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
   -e POLL_INTERVAL_MINUTES="${POLL_INTERVAL_MINUTES:-10}" \
@@ -50,5 +45,5 @@ sudo docker run -d --name stock-tracker --restart unless-stopped \
   stock-tracker
 
 echo ""
-echo "Tamam! Loglari izle:   sudo docker logs -f stock-tracker"
-echo "Durum:                 sudo docker ps"
+echo "Tamam! Loglari izle:   docker logs -f stock-tracker"
+echo "Durum:                 docker ps"
