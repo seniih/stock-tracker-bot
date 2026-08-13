@@ -1,277 +1,91 @@
-# StockTracker Bot
+# 🛍️ StockTracker Bot
 
-Türk giyim mağazalarında (Zara, DeFacto…) tükenen ürünlerin belirli bir
-**bedeni** tekrar stoğa girince Telegram üzerinden bildirim gönderen bot.
+Hepimizin başına gelmiştir: O çok beğendiğin kıyafeti bulursun ama tam senin bedenin tükenmiştir! Sürekli siteye girip çıkmaktan yorulmadın mı? İşte **StockTracker Bot** tam olarak bu sorunu çözmek için doğdu.
 
-## Özellikler
+Bu bot, Zara ve DeFacto gibi mağazalardaki ürünlerin stok durumunu senin yerine 7/24 takip eder. İstediğin beden tekrar stoğa girdiğinde sana Telegram üzerinden anında mesaj atar. Üstelik bunu yaparken spam yapmaz, seni darlamaz; sadece stok geldiğinde tek bir bildirim gönderir.
 
-- 🔗 Ürün linkini Telegram'a yapıştır, bot bedenleri ve stok durumunu (✅/❌) buton olarak gösterir.
-- 🔔 Takip ettiğin beden stoğa girdiğinde tek seferlik bildirim alırsın (aynı stok için tekrar spam yok).
-- 📋 `/liste` ile aktif takiplerini gör, tek dokunuşla sil.
-- ⏱ Arka planda periyodik poller (varsayılan 10 dk) tüm abonelikleri kontrol eder.
-- 💾 SQLite (varsayılan) veya herhangi bir SQLAlchemy destekli veritabanı (`DB_URL` ile).
+## ✨ Neler Yapabiliyor?
 
-## Desteklenen Mağazalar
+- 🔗 **Kolay Kullanım:** Sadece ürün linkini kopyalayıp bota yapıştır. Bot sana tüm bedenleri ve stok durumlarını (✅/❌) butonlar halinde sunar.
+- 🔔 **Akıllı Bildirim:** Takip ettiğin beden stoğa girdiğinde anında haberin olur. Stok tekrar bitip gelene kadar aynı ürün için bir daha bildirim almazsın.
+- 📋 **Takip Listesi:** `/liste` komutuyla neleri takip ettiğini görebilir, tek tıkla takibi bırakabilirsin.
+- ⏱ **Sessiz Çalışan İşçi:** Bot arka planda (varsayılan olarak 10 dakikada bir) tüm ürünleri kontrol eder.
+- 💾 **Hafif ve Hızlı:** Standart olarak SQLite kullanır ama istersen PostgreSQL gibi daha büyük veritabanlarına da kolayca bağlanabilir.
 
-| Mağaza | Durum | Yöntem |
+## 🏪 Desteklenen Mağazalar
+
+| Mağaza | Durum | Teknik Detay |
 |---|---|---|
-| Zara | ✅ | `products-details` JSON ucu (tek istek) |
-| DeFacto | ✅ | HTML'e gömülü `SizeName` / `StockQuantity` |
-| Bershka / Pull & Bear | ❌ | Inditex Akamai — headless tarayıcıyı bile bloklıyor |
-| LC Waikiki | ❌ | Akamai WAF — httpx 403, Playwright protokol hatası |
-| H&M | ❌ | Akamai — httpx 403, Playwright "Access Denied" |
-
-> ❌ işaretli mağazalar residential IP'de headless Playwright + stealth ile bile
-> bloklandı. Güvenilir çekim için ücretli bir anti-bot servisi (unblocker/proxy)
-> gerekir — küçük, ücretsiz barınan bir araç için orantısız bir maliyet.
+| **Zara** | ✅ Aktif | Kendi API'si üzerinden JSON çekilerek çok hızlı çalışır. |
+| **DeFacto** | ✅ Aktif | Sayfa kaynağından anlık stok miktarı okunur. |
+| *Diğerleri* | ❌ Şimdilik Yok | Bershka, H&M, LCW gibi markalar Akamai Bot koruması kullandığı için ücretsiz sunuculardan (veya IP'lerden) erişim zorlukları çıkarabiliyor. |
 
 ---
 
-## Yerel Geliştirme
+## 🚀 Kendi Botunu Nasıl Kurarsın? (Lokal Kurulum)
 
-### Gereksinimler
+Kendi bilgisayarında test etmek oldukça kolaydır. Python 3.13+ yüklü olması yeterlidir.
 
-- Python 3.13+
-- Telegram bot token ([@BotFather](https://t.me/BotFather) üzerinden ücretsiz)
-
-### Kurulum
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-cp .env.example .env
-# .env içindeki TELEGRAM_BOT_TOKEN'ı BotFather'dan aldığın token ile doldur.
-```
-
-### Telegram Bot Token Alma
-
-1. Telegram'da [@BotFather](https://t.me/BotFather)'a yaz.
-2. `/newbot` → bota bir isim ve kullanıcı adı ver.
-3. Verdiği token'ı `.env` dosyasındaki `TELEGRAM_BOT_TOKEN`'a yapıştır.
-
-### Çalıştırma
-
-```bash
-python -m stock_tracker.bot.main
-```
-
-Sonra Telegram'da botuna `/start` yaz.
+1. **Bot Token'ı Al:** Telegram'da [@BotFather](https://t.me/BotFather)'a gidip `/newbot` yazarak kendine bir bot oluştur ve verdiği Token'ı kopyala.
+2. **Projeyi İndir ve Kur:**
+   ```bash
+   git clone https://github.com/seniih/stock-tracker-bot.git
+   cd stock-tracker-bot
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Ayarları Yap:** `.env.example` dosyasının adını `.env` olarak değiştir ve içine kopyaladığın Token'ı yaz:
+   ```env
+   TELEGRAM_BOT_TOKEN=senin_token_buraya
+   ```
+4. **Botu Çalıştır!**
+   ```bash
+   python -m stock_tracker.bot.main
+   ```
+   Artık Telegram'dan botuna gidip `/start` diyebilirsin!
 
 ---
 
-## Yapılandırma
+## 🌍 Sunucuya (VPS) Yükleme ve 7/24 Çalıştırma
 
-Tüm ayarlar ortam değişkeni (`.env` veya deploy ortamının secret/variable
-mekanizması) üzerinden okunur:
+Botunun bilgisayarını kapattığında bile çalışmaya devam etmesi için onu bir VPS'e (Sanal Sunucu) yüklemelisin. Bu proje, **tam otomatik dağıtım (CI/CD)** için mükemmel şekilde ayarlanmıştır. Docker sayesinde kurulum çok basittir ve kalıcı veritabanı (Volume) kullanır.
 
-| Değişken | Zorunlu | Varsayılan | Açıklama |
-|---|---|---|---|
-| `TELEGRAM_BOT_TOKEN` | ✅ | — | BotFather'dan alınan bot token'ı |
-| `DB_URL` | ❌ | `sqlite:///stock_tracker.db` | SQLAlchemy bağlantı dizesi (üretimde `sqlite:////data/stock_tracker.db` veya `postgresql+psycopg://...`) |
-| `POLL_INTERVAL_MINUTES` | ❌ | `10` | Stok kontrol sıklığı (dakika). Sitelere kibar olmak için 5'in altına inme. |
+### 1. Sunucuyu Hazırla (Sadece 1 Kez)
+Sunucuna bağlanıp Docker'ı kur ve projeyi barındıracağın klasörü hazırla:
+```bash
+sudo apt-get update -y && sudo apt-get install -y docker.io
+sudo systemctl enable --now docker
+sudo usermod -aG docker $USER # Docker'ı şifresiz (sudo'suz) kullanabilmek için
+
+mkdir -p /opt/stock-tracker-bot
+cd /opt/stock-tracker-bot
+git clone https://github.com/seniih/stock-tracker-bot.git .
+
+# Ayar dosyanı oluştur
+nano .env
+# İçine şunu yaz ve kaydet: TELEGRAM_BOT_TOKEN=senin_token_buraya
+```
+*(Grupların güncellenmesi için sunucudan `exit` yazıp çıkın ve tekrar bağlanın).*
+
+### 2. GitHub Actions ile Tam Otomatik Güncelleme
+Bilgisayarında kod yazıp GitHub'a yüklediğinde (`git push`), sistemin otomatik olarak sunucuna bağlanıp botu güncellemesi için GitHub Actions (`.github/workflows/deploy.yml`) hazır bekliyor! 
+
+Bunun için GitHub'da projenin **Settings → Secrets and variables → Actions** kısmına şu bilgileri eklemelisin:
+- `VPS_HOST`: Sunucunun IP adresi (Örn: 198.51.100.23)
+- `VPS_USER`: Sunucudaki kullanıcı adın (Örn: ubuntu, root, senih)
+- `VPS_SSH_KEY`: Sunucuya erişim için ürettiğin Özel SSH Anahtarı (Private Key). 
+  *(Bu robotun sunucuya girebilmesi için kendi bilgisayarında `ssh-keygen` ile şifresiz bir anahtar üretip, `.pub` uzantılı açık anahtarı sunucundaki `~/.ssh/authorized_keys` dosyasına eklemeyi unutma!)*
+
+**İşte bu kadar!** Artık kodunda bir değişiklik yapıp `main` dalına pushladığında, GitHub robotu sunucuna bağlanacak, yeni kodları indirecek ve botunu otomatik olarak yeniden başlatacaktır. Sen sadece arkanı yaslanıp kahveni yudumlayabilirsin! ☕
 
 ---
 
-## Deploy — VPS (Önerilen)
+## 🛠️ Projenin İçi (Geliştiriciler İçin)
 
-Bot bir **worker** olarak long-polling ile çalışır — public port veya webhook gerekmez.
-SQLite verisi `stock_tracker_data` adlı kalıcı bir Docker volume'de (`/data`) tutulur.
+Eğer projeyi incelemek veya katkıda bulunmak istersen, yapı oldukça modülerdir:
+- `bot/`: Telegram botunun beyni. Handlerlar, klavyeler ve poller burada yönetilir.
+- `core/`: Veritabanı işlemleri (SQLAlchemy) ve ayarlar bulunur.
+- `adapters/`: Mağazalara özel stok çekme modülleri. Yeni bir mağaza eklemek istersen, `base.py` içindeki taslağı inceleyip kendi mağaza adaptörünü dakikalar içinde yazabilirsin!
 
-Aşağıdaki adımlar Ubuntu 22.04/24.04 tabanlı herhangi bir VPS için geçerlidir
-(Oracle Cloud Always Free, Hetzner, DigitalOcean vb.).
-
-### 1. Sunucuya SSH ile Bağlan
-
-```bash
-ssh kullanici@SUNUCU_IP
-```
-
-### 2. Repo'yu Klonla
-
-```bash
-sudo mkdir -p /opt/apps
-sudo chown $USER:$USER /opt/apps
-git clone https://github.com/seniih/stock-tracker-bot.git /opt/apps/stock_tracker
-cd /opt/apps/stock_tracker
-```
-
-### 3. Botu Kur ve Başlat
-
-`setup.sh` Docker'ı otomatik olarak kurar (yoksa), imajı build eder ve botu
-`--restart unless-stopped` ile 7/24 ayakta tutar.
-
-```bash
-TELEGRAM_BOT_TOKEN=BURAYA_BOTFATHER_TOKEN bash deploy/setup.sh
-```
-
-Kurulum tamamlanınca aşağıdaki çıktıyı görmelisin:
-
-```
-==> Docker kuruluyor (gerekliyse)...
-==> Imaj build ediliyor...
-==> Eski konteyner varsa kaldiriliyor...
-==> Bot baslatiliyor (7/24, otomatik yeniden baslatmali)...
-Tamam! Loglari izle:   sudo docker logs -f stock-tracker
-Durum:                 sudo docker ps
-```
-
-### 4. Kurulumu Doğrula
-
-```bash
-# Konteynerin ayakta olduğunu kontrol et
-sudo docker ps
-
-# Logları canlı izle (Ctrl+C ile çık)
-sudo docker logs -f stock-tracker
-```
-
-`Bot başlatılıyor` satırını gördüysen bot çalışıyor demektir.
-
----
-
-## Logları İzleme ve Yönetim
-
-### Temel Log Komutları
-
-```bash
-# Logları canlı takip et
-sudo docker logs -f stock-tracker
-
-# Son 100 satırı göster
-sudo docker logs --tail 100 stock-tracker
-
-# Son 1 saatin loglarını göster
-sudo docker logs --since 1h stock-tracker
-
-# Belirli bir zaman aralığındaki logları göster
-sudo docker logs --since "2025-01-01T00:00:00" --until "2025-01-01T23:59:59" stock-tracker
-```
-
-> **Not:** `setup.sh` konteyneri `--log-opt max-size=10m --log-opt max-file=3`
-> ile başlatır. Bu sayede log dosyaları en fazla 3×10 MB = 30 MB yer kaplar,
-> otomatik döndürülür.
-
-### Konteyner Durumu ve Yönetim
-
-```bash
-# Çalışan konteynerleri listele
-sudo docker ps
-
-# Konteynerin kaynak kullanımını izle (CPU, RAM)
-sudo docker stats stock-tracker
-
-# Botu yeniden başlat
-sudo docker restart stock-tracker
-
-# Botu durdur
-sudo docker stop stock-tracker
-
-# Botu tekrar başlat
-sudo docker start stock-tracker
-```
-
-### Güncelleme (Manuel)
-
-Yeni bir sürüm yayınlandığında VPS'te şunu çalıştır:
-
-```bash
-cd /opt/apps/stock_tracker
-git pull --ff-only
-TELEGRAM_BOT_TOKEN=BURAYA_BOTFATHER_TOKEN bash deploy/setup.sh
-```
-
-`setup.sh` eski konteyneri kaldırıp yeni imajı build ederek botu günceller.
-Volume (`/data`) silinmez, tüm abonelikler korunur.
-
----
-
-## Otomatik Deploy (GitHub Actions)
-
-`main` branch'ine her `git push`'ta `.github/workflows/deploy.yml` SSH ile VPS'e
-bağlanıp `git pull` + `deploy/setup.sh` çalıştırır — manuel müdahale gerekmez.
-
-### GitHub Secrets Kurulumu
-
-Repo → **Settings → Secrets and variables → Actions → New repository secret**
-ile aşağıdaki secret'ları ekle:
-
-| Secret | Açıklama |
-|---|---|
-| `VPS_HOST` | Sunucunun IP adresi veya domain'i |
-| `VPS_USER` | SSH kullanıcı adı (örn. `ubuntu`, `root`) |
-| `VPS_SSH_KEY` | Deploy için üretilen SSH private key |
-| `VPS_SSH_PORT` | SSH portu (opsiyonel, varsayılan `22`) |
-| `TELEGRAM_BOT_TOKEN` | BotFather token'ı |
-
-### Deploy SSH Anahtarı Oluşturma
-
-```bash
-# Lokal makinende yeni bir anahtar çifti üret (passphrase boş bırak)
-ssh-keygen -t ed25519 -C "stock-tracker-deploy" -f ~/.ssh/stock_tracker_deploy
-
-# Public key'i sunucuya ekle (sunucuda çalıştır)
-cat ~/.ssh/stock_tracker_deploy.pub >> ~/.ssh/authorized_keys
-
-# Private key'i kopyala → GitHub'da VPS_SSH_KEY secret'ına yapıştır
-cat ~/.ssh/stock_tracker_deploy
-```
-
-### Otomatik Deploy Akışı
-
-```
-git push → GitHub Actions tetiklenir
-         → SSH ile VPS'e bağlanır
-         → git pull --ff-only
-         → deploy/setup.sh çalışır (imaj rebuild + konteyner güncellenir)
-         → Bot yeni sürümle ayağa kalkar
-```
-
----
-
-## Alternatif: Railway
-
-1. Yeni proje → **"Deploy from GitHub repo"** (veya `railway up`). Dockerfile otomatik algılanır.
-2. **Variables:** `TELEGRAM_BOT_TOKEN` = token, `DB_URL` = `sqlite:////data/stock_tracker.db`
-3. **Volume** ekle, mount yolu `/data` (SQLite'ın kalıcı olması için).
-4. Deploy → Logs'tan `Bot başlatılıyor` satırını gör.
-
-> Alternatif: Volume yerine Railway Postgres eklentisi kullanıp `DB_URL`'i
-> `postgresql+psycopg://...` yapabilirsin (bu durumda `psycopg[binary]` bağımlılığı eklenir).
-
----
-
-## Proje Yapısı
-
-```
-stock_tracker/
-  bot/
-    main.py       # giriş noktası: Application kurulumu + poller zamanlayıcısı
-    handlers.py   # Telegram komut/callback handler'ları
-    keyboards.py  # inline klavye (beden seçimi, abonelik listesi)
-  core/
-    config.py     # .env'den ayar okuma
-    db.py         # SQLAlchemy engine/session yönetimi
-    models.py     # User / Product / Subscription tabloları
-    repo.py       # veritabanı sorguları (handler'ları temiz tutar)
-    poller.py     # periyodik stok kontrolü + bildirim
-  adapters/
-    base.py       # ortak StockAdapter arayüzü + registry
-    zara.py       # Zara adaptörü
-    defacto.py    # DeFacto adaptörü
-    http.py       # paylaşılan, rate-limit'li HTTP istemcisi
-deploy/
-  setup.sh        # tek komutla VPS kurulum scripti
-```
-
----
-
-## Yol Haritası
-
-- [x] Faz 0 — İskelet + `/start`
-- [x] Faz 1 — İlk mağaza adaptörü: **Zara** (uçtan uca çalışıyor)
-- [x] Faz 2 — Link gönder → bedenleri butonla seç → abone ol · `/liste` · sil
-- [x] Faz 3 — Poller + bildirim (yok→var geçişinde haber, spam yok)
-- [x] Faz 4 — DeFacto eklendi (Bershka/Pull&Bear/LCW/H&M: Akamai bloğu, bkz. yukarıdaki tablo)
-- [x] Faz 5 — Deploy hazır (Dockerfile + `deploy/setup.sh`, VPS + GitHub Actions ile otomatik güncelleme)
+Umarım bu bot, kaçırdığın o güzel kıyafetleri yakalamana yardımcı olur! Geliştirmeye, yeni fikirler sunmaya ve yeni mağazalar eklemeye her zaman açığız. Mutlu takipler! 🚀
