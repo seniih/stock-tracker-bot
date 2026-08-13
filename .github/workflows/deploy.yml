@@ -19,6 +19,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_SSH_PORT || 22 }}
           script: |
-            cd /opt/apps/stock_tracker
+            cd /opt/stock-tracker-bot
             git pull --ff-only
             bash deploy/setup.sh
