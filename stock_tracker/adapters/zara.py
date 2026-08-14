@@ -13,7 +13,7 @@ import sys
 from urllib.parse import parse_qs, urlsplit
 
 from stock_tracker.adapters import http
-from stock_tracker.adapters.base import ProductInfo, Status, register
+from stock_tracker.adapters.base import ProductInfo, Status, domain_matches, register
 
 _DETAILS_URL = "https://www.zara.com/tr/tr/products-details?productIds={pid}&ajax=true"
 _JSON_HEADERS = {"Accept": "application/json, text/plain, */*"}
@@ -36,7 +36,7 @@ class ZaraAdapter:
     store = "zara"
 
     def matches(self, url: str) -> bool:
-        return "zara.com" in urlsplit(url).netloc.lower()
+        return domain_matches(url, "zara.com")
 
     def _product_id(self, url: str) -> str:
         qs = parse_qs(urlsplit(url).query)

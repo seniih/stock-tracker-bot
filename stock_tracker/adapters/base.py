@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Protocol, runtime_checkable
+from urllib.parse import urlsplit
 
 
 class Status(str, Enum):
@@ -38,6 +39,29 @@ class StockAdapter(Protocol):
     async def fetch(self, url: str) -> ProductInfo:
         """Ürünü çek ve beden bazında stok durumunu döndür."""
         ...
+
+
+def domain_matches(url: str, domain: str) -> bool:
+    """URL gerçekten `domain`e mi ait?
+
+    Adaptörlerin `matches()` metodu bunu kullanmalı. Basit bir alt-dize kontrolü
+    (`"zara.com" in netloc`) yetmez, çünkü bot herkese açık ve URL'yi kullanıcı
+    gönderiyor; şu adresler alt-dize kontrolünü geçip sunucumuzu saldırganın
+    seçtiği bir host'a istek atmaya zorlardı (SSRF):
+
+        https://zara.com.saldirgan.net/...   -> netloc alt-dize olarak eşleşir
+        https://www.zara.com@saldirgan.net/  -> netloc "www.zara.com@saldirgan.net",
+                                                ama istek saldirgan.net'e gider
+
+    Bu yüzden host, kullanıcı bilgisi (`user@`) ve porttan arındırılıp tam
+    eşitlik ya da gerçek alt alan adı (`.domain` ile bitme) aranıyor.
+    """
+    parts = urlsplit(url)
+    if parts.scheme not in ("http", "https"):
+        return False
+    # netloc "kullanici@host:port" olabilir; sadece host kısmını al.
+    host = parts.netloc.lower().rpartition("@")[2].partition(":")[0]
+    return host == domain or host.endswith("." + domain)
 
 
 # ---- Registry ----------------------------------------------------------------

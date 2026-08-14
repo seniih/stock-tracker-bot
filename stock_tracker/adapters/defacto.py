@@ -16,7 +16,7 @@ from html import unescape
 from urllib.parse import urlsplit
 
 from stock_tracker.adapters import http
-from stock_tracker.adapters.base import ProductInfo, Status, register
+from stock_tracker.adapters.base import ProductInfo, Status, domain_matches, register
 
 _SIZE_RE = re.compile(r'"SizeName":"([^"]+)","StockQuantity":(\d+)')
 _ID_RE = re.compile(r"-(\d+)(?:[/?#]|$)")
@@ -33,7 +33,7 @@ class DefactoAdapter:
     store = "defacto"
 
     def matches(self, url: str) -> bool:
-        return "defacto.com.tr" in urlsplit(url).netloc.lower()
+        return domain_matches(url, "defacto.com.tr")
 
     def _product_id(self, url: str) -> str:
         path = urlsplit(url).path
