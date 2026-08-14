@@ -31,14 +31,31 @@ docker build -t stock-tracker .
 echo "==> Eski konteyner varsa kaldiriliyor..."
 docker rm -f stock-tracker 2>/dev/null || true
 
+# Konteyner artik root degil, botuser (uid 1000) olarak calisiyor. Volume root
+# olarak calisan eski surumde olustuysa /data root'a ait olur ve bot SQLite
+# dosyasina yazamaz. Asagidaki chown ilk geciste bunu duzeltir, sonraki
+# deploy'larda no-op'tur. Ayri bir yardimci image cekmemek icin zaten build
+# edilmis stock-tracker image'i --user 0 ile kullaniliyor.
+echo "==> Volume sahipligi (uid 1000) kontrol ediliyor..."
+docker run --rm --user 0 -v stock_tracker_data:/data stock-tracker \
+  chown -R 1000:1000 /data
+
 echo "==> Bot baslatiliyor (7/24, otomatik yeniden baslatmali)..."
 # DB_URL bilerek forward edilmiyor: Dockerfile'daki /data yolu, asagidaki
 # kalici volume'e (stock_tracker_data) sabit. .env'deki (lokal gelistirme icin
 # goreli bir SQLite yolu olabilir) DB_URL buraya sizarsa, veri her yeniden
 # deploy'da (docker rm + docker run) konteynerin gecici dosya sistemine yazilip
 # kalici volume yerine sessizce kaybolur.
+#
+# Kaynak limitleri: bot kucuk bir is yuku (tipik ~150MB RSS), ama limitsiz
+# birakilirsa bir kacak durumunda VPS'i bogabilir. --memory-swap = --memory
+# olmasi swap'a tasmayi engeller, aksi halde bellek limiti anlamsizlasir.
+# 512m olcum sonrasi dusurulebilir: docker stats stock-tracker
 docker run -d --name stock-tracker --restart unless-stopped \
   --log-opt max-size=10m --log-opt max-file=3 \
+  --memory=512m --memory-swap=512m --cpus=0.5 \
+  --pids-limit=100 \
+  --security-opt=no-new-privileges --cap-drop=ALL \
   -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
   -e POLL_INTERVAL_MINUTES="${POLL_INTERVAL_MINUTES:-10}" \
   -v stock_tracker_data:/data \
