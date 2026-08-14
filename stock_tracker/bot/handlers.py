@@ -10,8 +10,11 @@ from telegram.ext import ContextTypes
 from stock_tracker.adapters.base import Status, get_adapter
 from stock_tracker.bot import keyboards
 from stock_tracker.core import repo
+from stock_tracker.core.config import load_settings
 
 logger = logging.getLogger("stock_tracker.handlers")
+
+_MAX_SUBSCRIPTIONS = load_settings().max_subscriptions_per_user
 
 _URL_RE = re.compile(r"https?://\S+")
 
@@ -73,8 +76,12 @@ async def on_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         info = await adapter.fetch(url)
     except Exception as e:  # noqa: BLE001 - kullanıcıya sade mesaj
+        # Ayrıntı sadece loglara: exception metni iç yol/URL sızdırabilir ve
+        # bot herkese açık.
         logger.warning("fetch hatası (%s): %r", url, e)
-        await status_msg.edit_text(f"⚠️ Ürünü alamadım: {e}")
+        await status_msg.edit_text(
+            "⚠️ Ürünü alamadım. Linki kontrol edip tekrar dener misin?"
+        )
         return
 
     if not info.sizes:
@@ -107,6 +114,15 @@ async def on_subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     _, product_id_str, size = query.data.split(":", 2)
     product_id = int(product_id_str)
     user_id = update.effective_user.id
+
+    # Bot herkese açık; kota olmazsa tek kullanıcı poller'ın iş yükünü sınırsız
+    # büyütebilir (ve mağazalara giden istekleri artırıp IP'mizi banlatabilir).
+    if repo.count_subscriptions(user_id) >= _MAX_SUBSCRIPTIONS:
+        await query.message.reply_text(
+            f"⚠️ En fazla {_MAX_SUBSCRIPTIONS} takip ekleyebilirsin. "
+            "Yenisini eklemek için /liste ile birini sil."
+        )
+        return
 
     # Bedenin güncel durumu (önbellekten; yoksa UNKNOWN -> poller ilk turda düzeltir).
     cached = context.user_data.get("sizes", {}).get(product_id, {})

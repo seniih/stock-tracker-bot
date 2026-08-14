@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from stock_tracker.adapters.base import ProductInfo
 from stock_tracker.core.db import get_session
@@ -46,6 +46,16 @@ def upsert_product(info: ProductInfo) -> int:
         product.last_checked_at = datetime.now(timezone.utc)
         s.commit()
         return product.id
+
+
+def count_subscriptions(user_id: int) -> int:
+    """Kullanıcının toplam abonelik sayısı (kota kontrolü için)."""
+    with get_session() as s:
+        return s.scalar(
+            select(func.count())
+            .select_from(Subscription)
+            .where(Subscription.user_id == user_id)
+        ) or 0
 
 
 def add_subscription(user_id: int, product_id: int, size_label: str, last_status: str) -> bool:
