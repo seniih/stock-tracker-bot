@@ -79,6 +79,16 @@ Bunun için GitHub'da projenin **Settings → Secrets and variables → Actions*
 
 **İşte bu kadar!** Artık kodunda bir değişiklik yapıp `main` dalına pushladığında, GitHub robotu sunucuna bağlanacak, yeni kodları indirecek ve botunu otomatik olarak yeniden başlatacaktır. Sen sadece arkanı yaslanıp kahveni yudumlayabilirsin! ☕
 
+### 3. Güvenlik ve kaynak sınırları
+
+Konteyner root olarak değil, `botuser` (uid 1000) olarak çalışır; ek olarak `--cap-drop=ALL` ve `--security-opt=no-new-privileges` ile kısıtlanmıştır. Bu yüzden `/data` volume'unun uid 1000'e ait olması gerekir — `deploy/setup.sh` bunu her çalıştığında kendisi düzeltir, elle bir şey yapmana gerek yok.
+
+Bot ayrıca 512MB bellek, 0.5 CPU ve 100 process ile sınırlıdır. Gerçek kullanımı `docker stats stock-tracker` ile izleyip `deploy/setup.sh` içindeki limitleri düşürebilirsin. Bot beklenmedik şekilde yeniden başlıyorsa bellek limitine takılmış olabilir:
+
+```bash
+docker inspect -f '{{.State.OOMKilled}} {{.RestartCount}}' stock-tracker
+```
+
 ---
 
 ## 🛠️ Projenin İçi (Geliştiriciler İçin)
