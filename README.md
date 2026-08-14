@@ -83,7 +83,7 @@ Bunun için GitHub'da projenin **Settings → Secrets and variables → Actions*
 
 Konteyner root olarak değil, `botuser` (uid 1000) olarak çalışır; ek olarak `--cap-drop=ALL` ve `--security-opt=no-new-privileges` ile kısıtlanmıştır. Bu yüzden `/data` volume'unun uid 1000'e ait olması gerekir — `deploy/setup.sh` bunu her çalıştığında kendisi düzeltir, elle bir şey yapmana gerek yok.
 
-Bot ayrıca 512MB bellek, 0.5 CPU ve 100 process ile sınırlıdır. Gerçek kullanımı `docker stats stock-tracker` ile izleyip `deploy/setup.sh` içindeki limitleri düşürebilirsin. Bot beklenmedik şekilde yeniden başlıyorsa bellek limitine takılmış olabilir:
+Bot ayrıca 256MB bellek, 0.5 CPU ve 100 process ile sınırlıdır (ölçülen boş çalışma kullanımı ~55MB). Gerçek kullanımı `docker stats stock-tracker` ile izleyebilirsin. Bot beklenmedik şekilde yeniden başlıyorsa bellek limitine takılmış olabilir:
 
 ```bash
 docker inspect -f '{{.State.OOMKilled}} {{.RestartCount}}' stock-tracker

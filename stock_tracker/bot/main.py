@@ -25,6 +25,10 @@ from stock_tracker.core.poller import check_all
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s", level=logging.INFO
 )
+# httpx INFO seviyesinde her istegi tam URL'iyle logluyor; Telegram API URL'i
+# bot token'ini icerdigi icin token her 10 saniyede bir loglara (ve `docker logs`
+# ciktisina) yaziliyordu. WARNING'e cekilince gercek hatalar hala gorunur.
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger("stock_tracker")
 
 

@@ -47,13 +47,13 @@ echo "==> Bot baslatiliyor (7/24, otomatik yeniden baslatmali)..."
 # deploy'da (docker rm + docker run) konteynerin gecici dosya sistemine yazilip
 # kalici volume yerine sessizce kaybolur.
 #
-# Kaynak limitleri: bot kucuk bir is yuku (tipik ~150MB RSS), ama limitsiz
-# birakilirsa bir kacak durumunda VPS'i bogabilir. --memory-swap = --memory
-# olmasi swap'a tasmayi engeller, aksi halde bellek limiti anlamsizlasir.
-# 512m olcum sonrasi dusurulebilir: docker stats stock-tracker
+# Kaynak limitleri: bot limitsiz birakilirsa bir kacak durumunda VPS'i bogabilir.
+# 256m, olculen bos-calisma kullanimina (~55MB RSS) gore genis bir marj birakiyor.
+# --memory-swap = --memory olmasi swap'a tasmayi engeller, aksi halde bellek
+# limiti anlamsizlasir. Kullanimi izlemek icin: docker stats stock-tracker
 docker run -d --name stock-tracker --restart unless-stopped \
   --log-opt max-size=10m --log-opt max-file=3 \
-  --memory=512m --memory-swap=512m --cpus=0.5 \
+  --memory=256m --memory-swap=256m --cpus=0.5 \
   --pids-limit=100 \
   --security-opt=no-new-privileges --cap-drop=ALL \
   -e TELEGRAM_BOT_TOKEN="$TELEGRAM_BOT_TOKEN" \
